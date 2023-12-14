@@ -1,12 +1,13 @@
-package terraform #policy package
- 
-allowed_instance_types := ["t2.micro", "t2.small", "t3.micro"] #conditions
+package terraform
 
-#policy_rule
+# Define a set of allowed instance types
+allowed_instance_types := {"t2.micro", "t2.small", "t3.micro"}
+
+# Deny rule that triggers if a resource is of a type not in the allowed set
 deny[msg] {
-    some i
-    resource := input.resource_changes[i]
+    resource := input.resource_changes[_]
     resource.type == "aws_instance"
-    not allowed_instance_types[resource.change.after.instance_type]
-    msg := sprintf("resource %v uses disallowed instance type %v", [resource.address, resource.change.after.instance_type])
+    instance_type := resource.change.after.instance_type
+    not allowed_instance_types[instance_type]
+    msg := sprintf("Instance type '%v' is not allowed (resource: %v)", [instance_type, resource.address])
 }
