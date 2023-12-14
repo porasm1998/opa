@@ -36,14 +36,17 @@ pipeline {
         }
 
         stage('Handle OPA Results') {
-            steps {
-                script {
-                    def opaOutput = bat(script: 'opa eval --format raw --data instance_policy.rego --input plan.json "data.terraform.deny"', returnStdout: true).trim()
-                    if (opaOutput != "[]") {
-                        error("Policy violation: ${opaOutput}")
-                    }
-                }
+    steps {
+        script {
+            def opaOutput = bat(script: 'opa eval --format raw --data instance_policy.rego --input plan.json "data.terraform.deny"', returnStdout: true).trim()
+            // Extracting only the OPA evaluation result
+            def result = opaOutput.readLines().last().trim()
+            
+            if (result != "[]") {
+                error("Policy violation: ${result}")
             }
         }
+    }
+}
     }
 }
